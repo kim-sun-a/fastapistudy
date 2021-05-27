@@ -49,28 +49,28 @@ class BaseMixin:
             session.commit()
         return obj
 
-    # @classmethod
-    # def get(cls, session: Session = None, **kwargs):
-    #     """
-    #     한줄 읽어오기
-    #     :param session:
-    #     :param kwargs:
-    #     :return:
-    #     """
-    #     sess = next(db.session()) if not session else session
-    #     query = sess.query(cls)
-    #     for key, val in kwargs.items():
-    #         col = getattr(cls, key)
-    #         query = query.filter(col == val)
-    #
-    #     if query.count() > 1:
-    #         raise Exception("Only one row is supposed to be returned, but got more than one")
-    #
-    #     result = query.first()
-    #     if not session:
-    #         sess.close()
-    #     return result
-    #
+    @classmethod
+    def get(cls, session: Session = None, **kwargs):
+        """
+        한줄 읽어오기
+        :param session:
+        :param kwargs:
+        :return:
+        """
+        sess = next(db.session()) if not session else session
+        query = sess.query(cls)
+        for key, val in kwargs.items():
+            col = getattr(cls, key)
+            query = query.filter(col == val)
+
+        if query.count() > 1:
+            raise Exception("Only one row is supposed to be returned, but got more than one")
+
+        result = query.first()
+        if not session:
+            sess.close()
+        return result
+
     # @classmethod
     # def filter(cls, session: Session = None, **kwargs):
     #     """
