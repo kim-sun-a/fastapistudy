@@ -39,10 +39,29 @@ async def register(sns_type: SnsType, reg_info: UserRegister, session: Session =
     return JSONResponse(status_code=400, content=dict(msg="NOT_SUPPORTED"))
 
 
+@router.post("/login/{sns_type}", status_code=200, response_model=Token)
+async def login(sns_type: SnsType, user_info: UserRegister):
+    if sns_type == SnsType.email:
+        is_exist = await is_email_exist(user_info.email)        # 이메일 유무 확인
+        if not user_info.email or not user_info.pw:
+            return JSONResponse(status_code=400, content=dict(msg="이메일이나 비밀번호는 필수 입력사항입니다."))
+        if not is_exist:
+            return JSONResponse(status_code=400, content=dict(msg="존재하지 않는 유저입니다."))
+        user = Users.get(email=user_info.email)
+        is_verified = bcrypt.checkpw(user_info.pw.encode('utf-8'), user.pw.encode('utf-8'))     # 비밀번호 해시 DB 비밀번호와 비교
+        if not is_verified:
+            return JSONResponse(status_code=400, content=dict(msg="아이디나 비밀번호가 일치하지 않습니다.")) # 아이디와 비밀번호가 틀릴 때 같은 에러를 내어 줘야 보안에 더 좋다
+        token = dict(Authorization=f"Bearer {create_access_token(data=UserToken.from_orm(user).dict(exclude={'pw', 'marketing_agree'}),)}")
+        # 완료후 저장된 유저 정보를 토대로 jwt 발급
+        return token
+    return JSONResponse(status_code=400, content=dict(msg="NOT_SUPPORTED"))
+
+
 async def is_email_exist(email: str):       # 이메일이 있는지 없는지 확인
     get_email = Users.get(email=email)
     if get_email:
         return True
+    return False
 
 
 def create_access_token(*, data: dict = None, expires_delta: int = None):

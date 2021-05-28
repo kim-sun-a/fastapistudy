@@ -43,32 +43,31 @@ class BaseMixin:
             col_name = col.name
             if col_name in kwargs:
                 setattr(obj, col_name, kwargs.get(col_name))
-        session.add(obj)
+        session.add(obj)            # 커밋을 위해 세션을 받아오기
         session.flush()
         if auto_commit:
             session.commit()
         return obj
 
     @classmethod
-    def get(cls, session: Session = None, **kwargs):
+    def get(cls, **kwargs):
         """
         한줄 읽어오기
-        :param session:
+        :param :
         :param kwargs:
         :return:
         """
-        sess = next(db.session()) if not session else session
+        sess = next(db.session())
         query = sess.query(cls)
         for key, val in kwargs.items():
             col = getattr(cls, key)
             query = query.filter(col == val)
 
+        # 2개 이상 나오면 에러가 나옴 반드시 한개만 리턴이 되야하는 의도
         if query.count() > 1:
             raise Exception("Only one row is supposed to be returned, but got more than one")
 
         result = query.first()
-        if not session:
-            sess.close()
         return result
 
     # @classmethod

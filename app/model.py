@@ -25,6 +25,7 @@ class SnsType(str, Enum):
 class Token(BaseModel):
     Authorization: str = None
 
+
 # 토큰을 객체화
 class UserToken(BaseModel):
     id: int
