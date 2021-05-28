@@ -17,13 +17,15 @@ class Config:
 # 딕셔너리 형식으로 가져오고 싶기 때문에 데이터클래스 사용 -> 언패킹 가능
 @dataclass
 class LocalConfig(Config):
-    PROJ_RELOAD: bool = True
     DB_URL: str = "mysql+pymysql://root:root@localhost:3306/study"
+    TRUSTED_HOSTS = ["*"]
+    ALLOW_SITE = ["*"]
 
 
 @dataclass
 class ProdConfig(Config):
-    PROJ_RELOAD: bool = False
+    TRUSTED_HOSTS = ["*"]
+    ALLOW_SITE = ["*"]
 
 
 def conf():
