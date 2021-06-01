@@ -10,7 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.common.consts import EXCEPT_PATH_LIST, EXCEPT_PATH_REGEX
 from app.database.conn import db
 from app.common.config import conf
-from app.middelwares.token_validator import AccessControl
+from app.middelwares.token_validator import access_control
 from app.middelwares.trusted_hosts import TrustedHostMiddleWare
 from app.router import index, auth, user
 
@@ -32,7 +32,7 @@ def create_app():
     # 레디스 이니셜라이즈
 
     # 미들웨어 정의
-    app.add_middleware(AccessControl, except_path_list=EXCEPT_PATH_LIST, except_path_regex=EXCEPT_PATH_REGEX)
+    app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=access_control)
     app.add_middleware(             # 이게 없으면 프론트 주소와 백엔드 주소가 다르면 접근 불가능
         CORSMiddleware,             # 특정 호스트로 접근할 수 있는 미들웨어
         allow_origins=conf().ALLOW_SITE,
