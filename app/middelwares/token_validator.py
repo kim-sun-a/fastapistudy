@@ -2,22 +2,18 @@ import re
 import time
 import typing
 import jwt
+import sqlalchemy.exc
 
-from fastapi.params import Header
 from jwt.exceptions import ExpiredSignatureError, DecodeError
-from pydantic import BaseModel
 
 from starlette.requests import Request
-from starlette.datastructures import URL, Headers
 from starlette.responses import JSONResponse, Response
 
 from app.common.consts import EXCEPT_PATH_LIST, EXCEPT_PATH_REGEX
 from app.error import exceptions as ex
-from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.common import config, consts
-from app.common.config import conf
-from app.error.exceptions import APIException
+from app.error.exceptions import APIException, SqlFailureEx
 from app.model import UserToken
 
 from app.utils.date_utils import D
@@ -53,7 +49,7 @@ async def access_control(request: Request, call_next):
                     raise ex.NotAuthorized()
         else:
             # 템플릿 렌더링 경우 쿠키에서 토큰 검사
-            cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTcsImVtYWlsIjoic3VuYUBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInNuc190eXBlIjpudWxsfQ.3W6iKVzzz9jJojUVGJaMHZLYCKqVIsOcqejyXbqSOSE"
+            #cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTcsImVtYWlsIjoic3VuYUBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInNuc190eXBlIjpudWxsfQ.3W6iKVzzz9jJojUVGJaMHZLYCKqVIsOcqejyXbqSOSE"
 
             if "Authorization" not in cookies.keys():
                 raise ex.NotAuthorized()
@@ -96,6 +92,8 @@ async def token_decode(access_token):
 
 
 async def exception_handler(error: Exception):
+    if isinstance(error, sqlalchemy.exc.OperationalError):
+        error = SqlFailureEx(ex=error)
     if not isinstance(error, APIException):
         error = APIException(ex=error, detail=str(error))
     return error
